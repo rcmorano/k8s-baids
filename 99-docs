@@ -1,0 +1,50 @@
+#!/bin/bash
+
+function k8sb-check-tool-tomdoc() {
+
+  k8sb-check-tool tomdoc.sh
+  if [ $? -ne 0 ]
+  then
+    echo "[!] Please install tomdoc.sh: https://github.com/tests-always-included/tomdoc.sh"
+    return 1
+  fi
+
+}
+
+function k8sb-generate-doc() {
+
+  k8sb-init
+  k8sb-generate-md-docs > ${PROJECT_DIR}/doc/README.md
+
+}
+
+function k8sb-generate-md-docs() {
+
+  k8sb-init
+  k8sb-check-tool-tomdoc || return 1
+  tomdoc.sh --markdown $PROJECT_DIR/[0-9]* | sed 's|()`$|`|'
+
+}
+
+function k8sb-generate-text-docs() {
+
+  k8sb-init
+  k8sb-check-tool-tomdoc || return 1
+  tomdoc.sh --text $PROJECT_DIR/[0-9]* | sed 's|()`$|`|'
+
+}
+
+# Returns this documentation in a CLI-friendly format (tomdoc's plain-text).
+function k8sb-help() {
+
+  k8sb-generate-text-docs
+
+}
+
+function k8sb-generate-baids-list() {
+
+  k8sb-init
+  EXCEPTIONS="k8sb-init\|k8sb-generate\|k8sb-check\|k8sb-set\|k8sb-help\|-set-version$"
+  grep ^function ${PROJECT_DIR}/* | awk '{print $2}' | sed 's|()||g' | sort | grep -v ${EXCEPTIONS}
+
+}

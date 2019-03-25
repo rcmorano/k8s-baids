@@ -1,0 +1,35 @@
+#!/bin/bash
+
+function k8sb-get-dashboard-service() {
+
+  kubectl-get-all-services | grep --color=none "^NAME\|kubernetes-dashboard"
+
+}
+
+function k8sb-set-dashboard-version() {
+
+  K8S_DASHBOARD_VER="1.10.1"
+
+}
+
+function k8sb-set-dashboard-manifest-url() {
+
+  MANIFEST_URL="https://raw.githubusercontent.com/kubernetes/dashboard/v${K8S_DASHBOARD_VER}/src/deploy/recommended/kubernetes-dashboard.yaml"
+
+}
+
+function k8sb-install-k8s-dashboard() {
+
+  test -z "$K8S_DASHBOARD_VER" && k8sb-set-dashboard-version
+  k8sb-set-dashboard-manifest-url
+  kubectl apply -f ${MANIFEST_URL}
+
+}
+
+function k8sb-uninstall-k8s-dashboard() {
+
+  test -z "$K8S_DASHBOARD_VER" && k8sb-set-dashboard-version
+  k8sb-set-dashboard-manifest-url
+  kubectl delete -f ${MANIFEST_URL}
+
+}

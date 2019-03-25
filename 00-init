@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Enables bash-completion for the known tools
+which kubectl &> /dev/null && \
+  source <(kubectl completion bash) && \
+  alias k=kubectl && \
+  complete -F __start_kubectl k
+
+which kompose &> /dev/null && \
+  source <(kompose completion bash)
+
+# Initializes project's enviroment
+function k8sb-init() {
+
+  PROJECT_DIR="$( dirname $(readlink -f "${BASH_SOURCE[0]}") )"
+  DOCS_DIR="${PROJECT_DIR}/docs"
+
+}

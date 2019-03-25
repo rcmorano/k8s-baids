@@ -1,0 +1,40 @@
+#!/bin/bash
+
+function kompose-get-latest-tag() {
+
+  GIT_REPO="git://github.com/kubernetes/kompose.git"
+  git ls-remote --tags ${GIT_REPO} | awk '{print $NF}' | sed 's|refs/tags/v||g' | sort -V | tail -n1
+
+}
+
+function kompose-set-version() {
+
+  test -z "$TOOL_VER" && TOOL_VER="1.17.0"
+
+}
+
+function kompose-install() {
+
+  kompose-set-version
+
+  TOOL_NAME="kompose-${TOOL_VER}"
+  TOOL_PATH="/usr/local/bin/skaffold"
+  TOOL_URL="https://github.com/kubernetes/kompose/releases/download/v${TOOL_VER}/kompose-linux-amd64"
+  echo "[+] Installing '${TOOL_NAME}'..."
+  sudo curl -L "${TOOL_URL}" -o "${TOOL_PATH}"
+  sudo chmod +x "${TOOL_PATH}"
+
+}
+
+function kompose-uninstall() {
+
+  sudo rm -f /usr/local/bin/kompose
+
+}
+
+function kompose-upgrade-to-latest-version() {
+
+  TOOL_VER=$(kompose-get-latest-tag)
+  kompose-install
+
+}

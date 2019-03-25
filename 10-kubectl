@@ -1,0 +1,217 @@
+#!/bin/bash
+
+function kubectl-set-api-version() {
+
+  K8S_API_VERSION="v1"
+
+}
+
+function kubectl-create-admin-user() {
+
+  K8S_USERNAME="$1"
+  K8S_NS="kube-system"
+  kubectl-set-api-version
+
+  if [ -z "$K8S_USERNAME" ]; then echo "Usage: ${FUNCNAME} \$K8S_USERNAME"; return 1; fi
+
+  cat <<EOF | kubectl create -f -
+apiVersion: ${K8S_API_VERSION}
+kind: ServiceAccount
+metadata:
+  name: ${K8S_USERNAME}
+  namespace: ${K8S_NS}
+EOF
+
+  cat <<EOF | kubectl create -f -
+apiVersion: rbac.authorization.k8s.io/${K8S_API_VERSION}
+kind: ClusterRoleBinding
+metadata:
+  name: ${K8S_USERNAME}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: ${K8S_USERNAME}
+  namespace: ${K8S_NS}
+EOF
+
+}
+
+function kubectl-get-user-token() {
+
+  K8S_USERNAME="$1"
+  K8S_NS="kube-system"
+
+  if [ -z "$K8S_USERNAME" ]; then echo "Usage: ${FUNCNAME} \$K8S_USERNAME"; return 1; fi
+
+  kubectl -n ${K8S_NS} describe secret $(kubectl -n ${K8S_NS} get secret | grep ${K8S_USERNAME} | awk '{print $1}')
+
+}
+
+function kubectl-get-all-namespaces-names() {
+
+  kubectl get ns --output name | sed 's|^namespace/||g'
+
+}
+
+
+function kubectl-get-not-namespaced-resources() {
+
+  kubectl api-resources --output=name --namespaced=false
+
+}
+
+function kubectl-get-namespaced-resources() {
+
+  kubectl api-resources --output=name --namespaced=true
+
+}
+
+function kubectl-get-all-resources-summary() {
+
+  ERRORS_REGEXP="No resources\|NotFound\|MethodNotAllowed"
+  # no namespaced resources
+  kubectl-get-not-namespaced-resources | while read resource
+  do
+    TMP_FILE="/tmp/k8sb.${resource}"
+    kubectl get ${resource} -o wide &> ${TMP_FILE}
+    grep -iq "$ERRORS_REGEXP" ${TMP_FILE} || \
+      ( echo "[+] '${resource}' list:" && \
+      cat ${TMP_FILE} )
+  done
+
+  # namespaced resources
+  kubectl-get-namespaced-resources | while read resource
+  do
+    TMP_FILE="/tmp/k8sb.${resource}"
+    kubectl get ${resource} --all-namespaces -o wide &> ${TMP_FILE}
+    grep -iq "$ERRORS_REGEXP" ${TMP_FILE} || \
+      ( echo "[+] '${resource}' list:" && \
+      cat ${TMP_FILE} )
+  done
+
+}
+
+function kubectl-get-all-resources-summary-for-ns() {
+
+  NS="$1"
+  ERRORS_REGEXP="No resources\|NotFound\|MethodNotAllowed"
+  kubectl-get-namespaced-resources | while read resource
+  do
+    TMP_FILE="/tmp/k8sb.${NS}.${resource}"
+    kubectl get ${resource} --namespace ${NS} -o wide &> ${TMP_FILE}
+    grep -iq "$ERRORS_REGEXP" ${TMP_FILE} || \
+      ( echo "[+] '${resource}' list:" &&
+        cat ${TMP_FILE} )
+  done
+
+
+}
+
+function kubectl-get-all-running-pods() {
+
+  kubectl get pods --field-selector=status.phase=Running
+
+}
+
+function kubectl-get-all-services() {
+
+  kubectl get services --all-namespaces
+
+}
+
+function kubectl-get-nodes-external-ips() {
+
+  kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="ExternalIP")].address}'
+
+}
+
+function kubectl-get-nodes-internal-ips() {
+
+  kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}'
+
+}
+
+function kubectl-get-all() {
+
+  # output for 'kubectl get'
+  # * certificatesigningrequests (aka 'csr')
+  # * clusterrolebindings
+  # * clusterroles
+  # * componentstatuses (aka 'cs')
+  # * configmaps (aka 'cm')
+  # * controllerrevisions
+  # * cronjobs
+  # * customresourcedefinition (aka 'crd')
+  # * daemonsets (aka 'ds')
+  # * deployments (aka 'deploy')
+  # * endpoints (aka 'ep')
+  # * events (aka 'ev')
+  # * horizontalpodautoscalers (aka 'hpa')
+  # * ingresses (aka 'ing')
+  # * jobs
+  # * limitranges (aka 'limits')
+  # * namespaces (aka 'ns')
+  # * networkpolicies (aka 'netpol')
+  # * nodes (aka 'no')
+  # * persistentvolumeclaims (aka 'pvc')
+  # * persistentvolumes (aka 'pv')
+  # * poddisruptionbudgets (aka 'pdb')
+  # * podpreset
+  # * pods (aka 'po')
+  # * podsecuritypolicies (aka 'psp')
+  # * podtemplates
+  # * replicasets (aka 'rs')
+  # * replicationcontrollers (aka 'rc')
+  # * resourcequotas (aka 'quota')
+  # * rolebindings
+  # * roles
+  # * secrets
+  # * serviceaccounts (aka 'sa')
+  # * services (aka 'svc')
+  # * statefulsets (aka 'sts')
+  # * storageclasses (aka 'sc')
+
+  #kubectl get pv,pvc,pod,rs,rc,sts,svc,deploy,cm --all-namespaces
+  kubectl get pv,pvc,pod,rs,rc,sts,svc,deploy,cm
+
+}
+
+function kubectl-delete-related-resource-on-namespace() {
+
+  ARGS="$@"
+  if [ -z "$ARGS" ]; then echo "Usage: $FUNCNAME \$NAMESPACE \$REGEXP"; return 1; fi
+
+  NAMESPACE="$1"
+  REGEXP=$(echo $ARGS | sed "s|$NAMESPACE ||g")
+
+  kubectl-get-all $NAMESPACE | grep $REGEXP | awk '{print $1}'| while read res;
+  do
+    RES_TYPE=$(echo $res | awk -F/ '{print $1}')
+    RES=$(echo $res| awk -F/ '{print $2}')
+    kubectl delete $RES_TYPE $RES
+  done
+
+}
+
+# TODO: knowhow vario
+# helm del --purge
+
+#RELEASE_NAME=dev-mongod
+#
+#REPLICAS=5
+#
+#helm upgrade ${RELEASE_NAME} --set replicas=$REPLICAS stable/mongodb-replicaset
+#
+#for ((i = 0; i < $REPLICAS; ++i)); do kubectl -n default expose pod ${RELEASE_NAME}-mongodb-replicaset-$i --type=NodePort; done
+
+#echo -n “Waiting for mongodb-replicaset to start…”
+#
+#while [[ $(helm status $RELEASE_NAME | grep 'v1/Pod' -A$(expr $REPLICAS + 1)|grep Running |wc -l) != $REPLICAS ]]; do echo -n .; sleep 1; done
+
+#helm install --name ${RELEASE_NAME} --set replicas=$REPLICAS --set persistentVolume.size=$REPLICA_SIZE  stable/mongodb-replicaset
+
+# kubectl expose deployment trudesk --type=NodePort --name=trudesk && kubectl get service trudesk
+

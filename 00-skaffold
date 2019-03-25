@@ -1,0 +1,39 @@
+#!/bin/bash
+
+function skaffold-get-latest-tag() {
+
+  GIT_REPO="git://github.com/GoogleContainerTools/skaffold.git"
+  git ls-remote --tags ${GIT_REPO} | awk '{print $NF}' | sed 's|refs/tags/v||g' | grep -v '\^{}' | sort -V | tail -n1
+
+}
+
+function skaffold-set-version() {
+
+  test -z "$TOOL_VER" && TOOL_VER="0.25.0"
+
+}
+
+function skaffold-install() {
+
+  skaffold-set-version
+  TOOL_NAME="skaffold-${TOOL_VER}"
+  TOOL_PATH="/usr/local/bin/skaffold"
+  TOOL_URL="https://storage.googleapis.com/skaffold/releases/v${TOOL_VER}/skaffold-linux-amd64"
+  echo "[+] Installing '${TOOL_NAME}'..."
+  sudo curl -L "${TOOL_URL}" -o "${TOOL_PATH}"
+  sudo chmod +x "${TOOL_PATH}"
+
+}
+
+function skaffold-uninstall() {
+
+  sudo rm -f /usr/local/bin/skaffold
+
+}
+
+function skaffold-upgrade() {
+
+  TOOL_VER=$(skaffold-get-latest-tag)
+  skaffold-install
+
+}

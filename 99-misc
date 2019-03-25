@@ -1,0 +1,12 @@
+#!/bin/bash
+
+function k8sb-check-tool() {
+
+  which "$@" &> /dev/null
+  if [ $? -ne 0 ]
+  then
+    echo "[!] '$@' not installed!"
+    return 1
+  fi
+
+}

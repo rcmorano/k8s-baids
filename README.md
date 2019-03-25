@@ -2,7 +2,7 @@
 
 'k8s-baids' stands for "Kubernetes BASH aids" and it's just a bunch of bash aliases for Kubernetes that grew up and became into a collection of bash functions.
 
-You can use them in a standalone way (just copy/paste functions or aliases to your own files) or you can use it with [baids](https://github.com/rcmorano/baids), a 32 LOC project to sort and manage bash functions and aliases.
+You can use them in a standalone way (just copy/paste functions or aliases to your own files) or you can use it with [baids], a 32 LOC project to sort and manage bash functions and aliases.
 
 # Installation
 
@@ -51,8 +51,8 @@ skaffold-upgrade
 
 You'll basically find two types of files/functions:
 
-* _00-$K8S_PROVIDER_: this 00-priority files provide functions for installing, removing and managing k8s-related tools such as 'k3s', 'skaffold' or 'kompose'.
-* _10-$K8S_TOOL_: this 10-priority files provide functions for interacting with a k8s cluster with tools like 'kubectl', 'skaffold'...
+* _00-$K8S_PROVIDER_: this 00-priority files provide functions for installing, removing and managing k8s-related tools such as [k3s], [skaffold] or [kompose].
+* _10-$K8S_TOOL_: this 10-priority files provide functions for interacting with a k8s cluster with tools like [kubectl], [skaffold]...
 
 # Extending/Contributing
 
@@ -85,3 +85,9 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.         
 See the License for the specific language governing permissions and              
 limitations under the License.
+
+[baids]: https://github.com/rcmorano/baids
+[k3s]: https://github.com/rancher/k3s
+[kubectl]: https://github.com/kubernetes/kubectl
+[kompose]: https://github.com/kubernetes/kompose
+[skaffold]: https://github.com/GoogleContainerTools/skaffold

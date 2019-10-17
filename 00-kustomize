@@ -1,0 +1,40 @@
+#!/bin/bash
+
+function kustomize-get-latest-tag() {
+
+  GIT_REPO="git://github.com/kubernetes-sigs/kustomize.git"
+  git ls-remote --tags ${GIT_REPO} | grep kustomize | grep [0-9]$ | awk '{print $NF}' | sed 's|refs/tags/kustomize/v||g' | sort -V | tail -n1
+
+}
+
+function kustomize-set-version() {
+
+  test -z "$TOOL_VER" && TOOL_VER="3.2.3"
+
+}
+
+function kustomize-install() {
+
+  kustomize-set-version
+
+  TOOL_NAME="kustomize-${TOOL_VER}"
+  TOOL_PATH="/usr/local/bin/kustomize"
+  TOOL_URL="https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${TOOL_VER}/kustomize_kustomize.v${TOOL_VER}_${ARCH}_amd64"
+  echo "[+] Installing '${TOOL_NAME}'..."
+  sudo curl -L "${TOOL_URL}" -o "${TOOL_PATH}"
+  sudo chmod +x "${TOOL_PATH}"
+
+}
+
+function kustomize-uninstall() {
+
+  sudo rm -f /usr/local/bin/kustomize
+
+}
+
+function kustomize-upgrade-to-latest-version() {
+
+  TOOL_VER=$(kustomize-get-latest-tag)
+  kustomize-install
+
+}

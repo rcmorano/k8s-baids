@@ -16,10 +16,15 @@ function kompose-set-version() {
 function kompose-install() {
 
   kompose-set-version
+  CURRENT_OS=$(uname -s)
+  case "${CURRENT_OS}" in
+    Darwin*)  ARCH="darwin";;
+    Linux*)   ARCH="linux";;
+  esac
 
   TOOL_NAME="kompose-${TOOL_VER}"
-  TOOL_PATH="/usr/local/bin/skaffold"
-  TOOL_URL="https://github.com/kubernetes/kompose/releases/download/v${TOOL_VER}/kompose-linux-amd64"
+  TOOL_PATH="/usr/local/bin/kompose"
+  TOOL_URL="https://github.com/kubernetes/kompose/releases/download/v${TOOL_VER}/kompose-${ARCH}-amd64"
   echo "[+] Installing '${TOOL_NAME}'..."
   sudo curl -L "${TOOL_URL}" -o "${TOOL_PATH}"
   sudo chmod +x "${TOOL_PATH}"

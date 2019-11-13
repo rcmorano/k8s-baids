@@ -125,9 +125,21 @@ function kubectl-delete-all-resources-from-ns() {
 
 }
 
+function kubectl-get-all-pods-pending() {
+
+  kubectl get pods -A --field-selector=status.phase=Pending
+
+}
+
 function kubectl-get-all-pods-running() {
 
-  kubectl get pods --field-selector=status.phase=Running
+  kubectl get pods -A --field-selector=status.phase=Running
+
+}
+
+function kubectl-get-all-pods-sorted-by-creation-timestamp() {
+
+  kubectl get pods -A --sort-by=.metadata.creationTimestamp
 
 }
 

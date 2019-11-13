@@ -14,7 +14,7 @@ function k8sb-check-tool-tomdoc() {
 function k8sb-generate-doc() {
 
   k8sb-init
-  k8sb-generate-md-docs > ${PROJECT_DIR}/doc/README.md
+  k8sb-generate-md-docs > ${PROJECT_DIR}/docs/README.md
 
 }
 

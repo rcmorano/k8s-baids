@@ -10,3 +10,15 @@ function k8sb-check-tool() {
   fi
 
 }
+
+function get-realpath-cmd() {
+
+  CURRENT_OS=$(uname -s)
+  case "${CURRENT_OS}" in
+    Darwin*)  REALPATH_CMD="realpath";;
+    Linux*) REALPATH_CMD="readlink -f"; REALPATH_ARGS="-f";;
+  esac
+
+  echo $REALPATH_CMD $REALPATH_ARGS
+
+}

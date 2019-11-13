@@ -12,7 +12,8 @@ which kompose &> /dev/null && \
 # Initializes project's enviroment
 function k8sb-init() {
 
-  PROJECT_DIR="$( dirname $(readlink -f "${BASH_SOURCE[0]}") )"
+  REALPATH_CMD=$(get-realpath-cmd)
+  PROJECT_DIR="$( dirname $(${REALPATH_CMD} "${BASH_SOURCE[0]}") )"
   DOCS_DIR="${PROJECT_DIR}/docs"
 
 }

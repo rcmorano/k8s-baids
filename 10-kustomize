@@ -3,13 +3,8 @@
 function kustomize-get-fullpath-for-dir() {
 
   DIR="$@"
-  CURRENT_OS=$(uname -s)
-  case "${CURRENT_OS}" in
-    Darwin*)  REALPATH_CMD="realpath";;
-    Linux*) REALPATH_CMD="readlink -f"; REALPATH_ARGS="-f";;
-  esac
-
-  FULL_PATH_MODULE=$(${REALPATH_CMD} ${REALPATH_ARGS} "${DIR}")
+  REALPATH_CMD=$(get-readpath-cmd)
+  FULL_PATH_MODULE=$(${REALPATH_CMD} "${DIR}")
   echo "${FULL_PATH_MODULE}"
 
 }

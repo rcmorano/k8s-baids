@@ -36,7 +36,7 @@ function kustomize-local-chart() {
 function kustomize-remote-chart() {
 
     if [ -z "$HELM_CHART_NAME" ] || [ -z "$HELM_RELEASE_NAME" ] || [ -z "$HELM_NAMESPACE" ]; then
-        echo "Usage: HELM_CHART_NAME=redis HELM_CHART_RELEASE=stable HELM_CHART_VERSION=0.23.0HELM_RELEASE_NAME=init0 HELM_NAMESPACE=development $FUNCNAME /path/to/your/kustomization/dir";
+        echo "Usage: HELM_CHART_NAME=redis HELM_CHART_RELEASE=stable HELM_CHART_VERSION=0.23.0 HELM_RELEASE_NAME=init0 HELM_NAMESPACE=development $FUNCNAME /path/to/your/kustomization/dir";
         echo -n "\n\n - Optionally, set a 'valuesFile=/path/to/your/values.yaml' to set helm chart values from it";
     fi;
     export chartRelease=$HELM_CHART_RELEASE;

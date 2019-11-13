@@ -83,7 +83,7 @@ function kubectl-get-all-resources-summary() {
   done
 
   # namespaced resources
-  kubectl-get-namespaced-resources | while read resource
+  kubectl-get-namespaced-resources | grep -iv events | while read resource
   do
     TMP_FILE="/tmp/k8sb.${resource}"
     kubectl get ${resource} --all-namespaces -o wide &> ${TMP_FILE}
@@ -98,7 +98,7 @@ function kubectl-get-all-resources-summary-for-ns() {
 
   NS="$1"
   ERRORS_REGEXP="No resources\|NotFound\|MethodNotAllowed"
-  kubectl-get-namespaced-resources | while read resource
+  kubectl-get-namespaced-resources | grep -iv events | while read resource
   do
     TMP_FILE="/tmp/k8sb.${NS}.${resource}"
     kubectl get ${resource} --namespace ${NS} -o wide &> ${TMP_FILE}
@@ -107,6 +107,21 @@ function kubectl-get-all-resources-summary-for-ns() {
         cat ${TMP_FILE} )
   done
 
+
+}
+
+function kubectl-delete-all-resources-from-ns() {
+
+  NS="$1"
+  ERRORS_REGEXP="No resources\|NotFound\|MethodNotAllowed"
+  kubectl-get-namespaced-resources | grep -iv events | while read resource
+  do
+    RESOURCE_TYPE=${resource}
+    TMP_FILE="/tmp/k8sb.${NS}.${RESOURCE_TYPE}"
+    kubectl get ${RESOURCE_TYPE} --namespace ${NS} -o wide &> ${TMP_FILE}
+    grep -iq "$ERRORS_REGEXP" ${TMP_FILE} || \
+      ( awk '{print $1}' ${TMP_FILE} | grep -v ^NAME | while read res; do kubectl delete -n ${NS} ${RESOURCE_TYPE} ${res}; done )
+  done
 
 }
 
@@ -225,6 +240,12 @@ function kubectl-get-nodes-status {
 function kubectl-get-nodes-taints() {
 
   kubectl get nodes -o json | jq ".items[]|{name:.metadata.name, taints:.spec.taints}"
+
+}
+
+function kubectl-get-events-sorted-by-timestamp() {
+
+  kubectl get events --sort-by='.lastTimestamp' $@
 
 }
 

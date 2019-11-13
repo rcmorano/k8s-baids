@@ -1,0 +1,45 @@
+#!/bin/bash
+
+function kfilt-get-latest-tag() {
+
+  GIT_REPO="git://github.com/ryane/kfilt.git"
+  git ls-remote --tags ${GIT_REPO} | grep [0-9]$ | awk '{print $NF}' | sed 's|refs/tags/v||g' | sort -V | tail -n1
+
+}
+
+function kfilt-set-version() {
+
+  test -z "$TOOL_VER" && TOOL_VER="0.0.3"
+
+}
+
+function kfilt-install() {
+
+  kfilt-set-version
+  UNAME=$(uname -s)
+  case "${UNAME}" in
+    Darwin*)  OS="darwin";;
+    Linux*)   OS="linux";;
+  esac
+
+  TOOL_NAME="kfilt-${TOOL_VER}"
+  TOOL_PATH="/usr/local/bin/kfilt"
+  TOOL_URL="https://github.com/ryane/kfilt/releases/download/v${TOOL_VER}/kfilt_${TOOL_VER}_${OS}_amd64"
+  echo "[+] Installing '${TOOL_NAME}' for ${OS}..."
+  sudo curl -L "${TOOL_URL}" -o "${TOOL_PATH}"
+  sudo chmod +x "${TOOL_PATH}"
+
+}
+
+function kfilt-uninstall() {
+
+  sudo rm -f /usr/local/bin/kfilt
+
+}
+
+function kfilt-upgrade-to-latest-version() {
+
+  TOOL_VER=$(kfilt-get-latest-tag)
+  kfilt-install
+
+}

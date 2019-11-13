@@ -1,0 +1,45 @@
+#!/bin/bash
+
+function kubebox-get-latest-tag() {
+
+  GIT_REPO="git://github.com/astefanutti/kubebox.git"
+  git ls-remote --tags ${GIT_REPO} | grep [0-9]$ | awk '{print $NF}' | sed 's|refs/tags/v||g' | sort -V | tail -n1
+
+}
+
+function kubebox-set-version() {
+
+  test -z "$TOOL_VER" && TOOL_VER="0.6.1"
+
+}
+
+function kubebox-install() {
+
+  kubebox-set-version
+  UNAME=$(uname -s)
+  case "${UNAME}" in
+    Darwin*)  OS="macos";;
+    Linux*)   OS="linux";;
+  esac
+
+  TOOL_NAME="kubebox-${TOOL_VER}"
+  TOOL_PATH="/usr/local/bin/kubebox"
+  TOOL_URL="https://github.com/astefanutti/kubebox/releases/download/v${TOOL_VER}/kubebox-${OS}"
+  echo "[+] Installing '${TOOL_NAME}' for ${OS}..."
+  sudo curl -L "${TOOL_URL}" -o "${TOOL_PATH}"
+  sudo chmod +x "${TOOL_PATH}"
+
+}
+
+function kubebox-uninstall() {
+
+  sudo rm -f /usr/local/bin/kubebox
+
+}
+
+function kubebox-upgrade-to-latest-version() {
+
+  TOOL_VER=$(kubebox-get-latest-tag)
+  kubebox-install
+
+}

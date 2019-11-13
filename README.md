@@ -15,7 +15,7 @@ baids-reload
 
 # Usage
 
-Here is the current almost complete functions list provided. Some are irrelevant/internal, so were removed from the list. 
+Here is the current almost complete functions list provided. Some are irrelevant/internal, so were removed from the list.
 Although most are self explanatory, some of them provide a full documentation in [docs], some provide arguments check and usage, and some don't provide nothing yet... So please feel free to contribute :D!
 
 ```
@@ -60,7 +60,7 @@ You'll basically find two types of files/functions:
 2. Add some bash functions (in e.g. your custom 'docker run' for exposing port 80 for a determined project)
 3. Execute 'baids-remap' and get shortened aliases for your functions
 4. Commit your changes
-5. Optionally, if you consider that your functions are generic enough to help someone out there, send me a pull request! 
+5. Optionally, if you consider that your functions are generic enough to help someone out there, send me a pull request!
 
 An easy way to contribute could be to write documentation for some of the baids. This can be done by writing [tomdoc](http://tomdoc.org/) right before the function definition and then, updating the markdown templates by executing:
 
@@ -68,22 +68,22 @@ An easy way to contribute could be to write documentation for some of the baids.
 k8sb-generate-doc
 ```
 
-# License and Author                                                             
-                                                                                 
-Author:: Roberto C. Morano (<rcmova@gmail.com>)                                  
-                                                                                 
-Copyright:: 2019, Roberto C. Morano (<rcmova@gmail.com>)                         
-                                                                                 
-Licensed under the Apache License, Version 2.0 (the "License");                  
-you may not use this file except in compliance with the License.                 
-You may obtain a copy of the License at                                          
-                                                                                 
-    http://www.apache.org/licenses/LICENSE-2.0                                   
-                                                                                 
-Unless required by applicable law or agreed to in writing, software              
-distributed under the License is distributed on an "AS IS" BASIS,                
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.         
-See the License for the specific language governing permissions and              
+# License and Author
+
+Author:: Roberto C. Morano (<rcmova@gmail.com>)
+
+Copyright:: 2019, Roberto C. Morano (<rcmova@gmail.com>)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License.
 
 [baids]: https://github.com/rcmorano/baids

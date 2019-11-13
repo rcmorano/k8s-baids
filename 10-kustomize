@@ -1,0 +1,52 @@
+#!/bin/bash
+
+function kustomize-get-fullpath-for-dir() {
+
+  DIR="$@"
+  CURRENT_OS=$(uname -s)
+  case "${CURRENT_OS}" in
+    Darwin*)  REALPATH_CMD="realpath";;
+    Linux*) REALPATH_CMD="readlink -f"; REALPATH_ARGS="-f";;
+  esac
+
+  FULL_PATH_MODULE=$(${REALPATH_CMD} ${REALPATH_ARGS} "${DIR}")
+  echo "${FULL_PATH_MODULE}"
+
+}
+
+function kustomize-download-chart-inflator-plugin() {
+
+  KUSTOMIZE_HOME="$@"
+
+  if [ ! -x "$KUSTOMIZE_HOME/kustomize/$plugin" ]
+  then
+    # https://github.com/kubernetes-sigs/kustomize/blob/master/examples/chart.md#use-a-remote-chart
+    plugin=plugin/someteam.example.com/v1/chartinflator/ChartInflator
+    curl -s --create-dirs -o \
+    "$KUSTOMIZE_HOME/kustomize/$plugin" \
+    "https://raw.githubusercontent.com/rcmorano/kustomize/feature/add-releaseName-and-releaseNamespace-support/$plugin"
+
+    chmod a+x $KUSTOMIZE_HOME/kustomize/$plugin
+  fi
+
+}
+
+function kustomize-remote-chart() {
+
+  if [ -z "$HELM_CHART_NAME" ] || [ -z "$HELM_RELEASE_NAME" ] || [ -z "$HELM_NAMESPACE" ]
+  then
+    echo "Usage: HELM_CHART_NAME=redis HELM_CHART_RELEASE=stable HELM_CHART_VERSION=0.23.0HELM_RELEASE_NAME=init0 HELM_NAMESPACE=development $FUNCNAME /path/to/your/kustomization/dir"
+    echo -n "\n\n - Optionally, set a 'valuesFile=/path/to/your/values.yaml' to set helm chart values from it"
+  fi
+  export chartRelease=$HELM_CHART_RELEASE
+  export chartVersion=$HELM_CHART_VERSION
+  export chartName=$HELM_CHART_NAME
+  export releaseName=$HELM_RELEASE_NAME
+  export releaseNamespace=$HELM_NAMESPACE
+  unset chartHome
+  KUSTOMIZE_DIR="$1"
+
+  KUSTOMIZE_DIR_FULL_PATH=$(kustomize-get-fullpath-for-dir ${KUSTOMIZE_DIR})
+  export XDG_CONFIG_HOME="${KUSTOMIZE_DIR_FULL_PATH}/.kustomize"
+  kustomize-download-chart-inflator-plugin "${XDG_CONFIG_HOME}"
+  envsubst < assets/k8s-kustomizations/helm-charts/base/remote-chartInflator.yaml.tpl > ${KUSTOMIZE_DIR}/chartInflator.yaml

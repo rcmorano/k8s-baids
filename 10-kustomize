@@ -17,12 +17,10 @@ function kustomize-get-fullpath-for-dir() {
 function kustomize-local-chart() {
 
     export KUSTOMIZE_DIR="$1";
-    if [ -z "$HELM_CHART_NAME" ] || [ -z "$HELM_CHART_HOME" ] || [ -z "$HELM_RELEASE_NAME" ] || [ -z "$HELM_NAMESPACE" ]; then
-        echo "Usage: HELM_CHART_NAME=gitlab HELM_CHART_HOME=~/Projects/gitlab/charts HELM_RELEASE_NAME=init0 HELM_NAMESPACE=development $FUNCNAME /path/to/your/kustomization/dir";
+    if [ -z "$HELM_CHART_HOME" ] || [ -z "$HELM_RELEASE_NAME" ] || [ -z "$HELM_NAMESPACE" ]; then
+        echo "Usage: HELM_CHART_HOME=~/Projects/gitlab/charts HELM_RELEASE_NAME=init0 HELM_NAMESPACE=development $FUNCNAME /path/to/your/kustomization/dir";
         echo -n "\n\n - Optionally, set a 'valuesFile=/path/to/your/values.yaml' to set helm chart values from it";
     fi;
-    export chartName=$HELM_CHART_NAME;
-    unset chartName;
     export chartHome=$HELM_CHART_HOME;
     export releaseName=$HELM_RELEASE_NAME;
     export releaseNamespace=$HELM_NAMESPACE;

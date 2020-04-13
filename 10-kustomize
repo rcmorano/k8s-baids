@@ -3,7 +3,7 @@
 function kustomize-get-fullpath-for-dir() {
 
   DIR="$@"
-  REALPATH_CMD=$(get-readpath-cmd)
+  REALPATH_CMD=$(get-realpath-cmd)
   FULL_PATH_MODULE=$(${REALPATH_CMD} "${DIR}")
   echo "${FULL_PATH_MODULE}"
 
@@ -14,7 +14,8 @@ function kustomize-local-chart() {
     export KUSTOMIZE_DIR="$1";
     if [ -z "$HELM_CHART_HOME" ] || [ -z "$HELM_RELEASE_NAME" ] || [ -z "$HELM_NAMESPACE" ]; then
         echo "Usage: HELM_CHART_HOME=~/Projects/gitlab/charts HELM_RELEASE_NAME=init0 HELM_NAMESPACE=development $FUNCNAME /path/to/your/kustomization/dir";
-        echo -n "\n\n - Optionally, set a 'valuesFile=/path/to/your/values.yaml' to set helm chart values from it";
+        echo -e "\n - Optionally, set a 'valuesFile=/path/to/your/values.yaml' to set helm chart values from it";
+        return 1
     fi;
     export chartHome=$HELM_CHART_HOME;
     export releaseName=$HELM_RELEASE_NAME;
@@ -28,12 +29,18 @@ function kustomize-local-chart() {
 
 function kustomize-remote-chart() {
 
-    if [ -z "$HELM_CHART_NAME" ] || [ -z "$HELM_RELEASE_NAME" ] || [ -z "$HELM_NAMESPACE" ]; then
-        echo "Usage: HELM_CHART_NAME=redis HELM_CHART_RELEASE=stable HELM_CHART_VERSION=0.23.0 HELM_RELEASE_NAME=init0 HELM_NAMESPACE=development $FUNCNAME /path/to/your/kustomization/dir";
-        echo -n "\n\n - Optionally, set a 'valuesFile=/path/to/your/values.yaml' to set helm chart values from it";
+    if [ -z "$HELM_CHART_NAME" ] ; then
+        echo "Usage: HELM_CHART_NAME=redis [HELM_CHART_RELEASE=stable HELM_CHART_VERSION=0.23.0 HELM_RELEASE_NAME=init0 HELM_NAMESPACE=default] $FUNCNAME /path/to/your/kustomization/dir";
+        echo -e "\n - Optionally, set a 'valuesFile=/path/to/your/values.yaml' to set helm chart values from it";
+        return 1
     fi;
     export chartRelease=$HELM_CHART_RELEASE;
-    export chartVersion=$HELM_CHART_VERSION;
+    if [ ! -z "$HELM_CHART_VERSION" ]
+    then
+      export chartVersion=$HELM_CHART_VERSION;
+    else
+      unset chartVersion
+    fi
     export chartName=$HELM_CHART_NAME;
     export releaseName=$HELM_RELEASE_NAME;
     export releaseNamespace=$HELM_NAMESPACE;

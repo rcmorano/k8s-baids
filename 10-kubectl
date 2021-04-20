@@ -42,7 +42,7 @@ EOF
 function kubectl-create-admin-user-for-ns() {
 
   K8S_NS="$1"
-  K8S_USERNAME="ns-admin"
+  K8S_USERNAME="$2"
   K8S_CLUSTER_NAME="$(kubectl config current-context | awk -F@ '{print $NF}')"
   K8S_CLUSTER_URL="$(kubectl cluster-info | grep control.plane | awk '{print $NF}' | sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g")"
 
@@ -74,7 +74,7 @@ EOF
   SA_CERT=$(kubectl get secret ${SA_SECRET_NAME} -n ${K8S_NS} -o "jsonpath={.data['ca\.crt']}")
 
 
-cat > ~/.kube/${K8S_CLUSTER_NAME}-${K8S_NS}.yaml <<EOF
+cat > ~/.kube/${K8S_CLUSTER_NAME}-${K8S_NS}-${K8S_USERNAME}.yaml <<EOF
 apiVersion: ${K8S_API_VERSION}
 kind: Config
 preferences: {}

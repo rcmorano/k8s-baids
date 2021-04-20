@@ -39,6 +39,78 @@ EOF
 
 }
 
+function kubectl-create-admin-user-for-ns() {
+
+  K8S_NS="$1"
+  K8S_USERNAME="ns-admin"
+  K8S_CLUSTER_NAME="$(kubectl config current-context | awk -F@ '{print $NF}')"
+  K8S_CLUSTER_URL="$(kubectl cluster-info | grep control.plane | awk '{print $NF}' | sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g")"
+
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ${K8S_USERNAME}
+  namespace: ${K8S_NS}
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: ${K8S_USERNAME}
+  namespace: ${K8S_NS}
+subjects:
+- kind: ServiceAccount
+  name: ${K8S_USERNAME}
+  namespace: ${K8S_NS}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+EOF
+
+  SA_SECRET_NAME=$(kubectl describe sa ${K8S_USERNAME} -n ${K8S_NS} | grep -i secret.*token | awk '{print $NF}')
+  SA_TOKEN=$(kubectl get secret ${SA_SECRET_NAME} -n ${K8S_NS} -o "jsonpath={.data.token}" | base64 -d)
+  SA_CERT=$(kubectl get secret ${SA_SECRET_NAME} -n ${K8S_NS} -o "jsonpath={.data['ca\.crt']}")
+
+
+cat > ~/.kube/${K8S_CLUSTER_NAME}-${K8S_NS}.yaml <<EOF
+apiVersion: ${K8S_API_VERSION}
+kind: Config
+preferences: {}
+
+# Define the cluster
+clusters:
+- cluster:
+    certificate-authority-data: ${SA_CERT}
+    # You'll need the API endpoint of your Cluster here:
+    server: ${K8S_CLUSTER_URL}
+  name: ${K8S_CLUSTER_NAME}
+
+# Define the user
+users:
+- name: ${K8S_USERNAME}
+  user:
+    as-user-extra: {}
+    client-key-data: ${SA_CERT}
+    token: ${SA_TOKEN}
+
+# Define the context: linking a user to a cluster
+contexts:
+- context:
+    cluster: ${K8S_CLUSTER_NAME}
+    namespace: ${K8S_NS}
+    user: ${K8S_USERNAME}
+  name: ${K8S_NS}
+
+# Define current context
+current-context: ${K8S_NS}
+EOF
+
+  echo "[!] New kubeconfig file generated at '~/.kube/${K8S_CLUSTER_NAME}-${K8S_NS}.yaml'!"
+
+}
+
 function kubectl-get-user-token() {
 
   K8S_USERNAME="$1"
@@ -263,6 +335,12 @@ function kubectl-get-nodes-status {
 
 }
 
+function kubectl-get-nodes-wide {
+
+  kubectl get nodes -o wide --show-labels
+
+}
+
 function kubectl-get-nodes-taints() {
 
   kubectl get nodes -o json | jq ".items[]|{name:.metadata.name, taints:.spec.taints}"
@@ -294,3 +372,75 @@ function kubectl-get-events-sorted-by-timestamp() {
 
 # kubectl expose deployment trudesk --type=NodePort --name=trudesk && kubectl get service trudesk
 
+
+function kubectl-run-with-attached-pvc() {
+
+  IMAGE="gcr.io/google-containers/ubuntu-slim:0.14"
+  COMMAND="/bin/bash"
+  SUFFIX=$(date +%s | shasum | base64 | fold -w 10 | head -1 | tr '[:upper:]' '[:lower:]')
+  
+  usage_exit() {
+      echo "Usage: $0 [-c command] [-i image] [-n namespace] [ PVC ..." 1>&2
+      return 1
+  }
+  
+  while getopts i:c:n:h OPT
+  do
+      case $OPT in
+          i)  IMAGE=$OPTARG
+              ;;
+          c)  COMMAND=$OPTARG
+              ;;
+          n)  NAMESPACE=$OPTARG
+              ;;
+          h)  usage_exit
+              ;;
+          \?) usage_exit
+              ;;
+      esac
+  done
+  shift $(($OPTIND - 1))
+  
+  VOL_MOUNTS=""
+  VOLS=""
+  COMMA=""
+  
+  for i in $@
+  do
+    VOL_MOUNTS="${VOL_MOUNTS}${COMMA}{\"name\": \"${i}\",\"mountPath\": \"/pvcs/${i}\"}"
+    VOLS="${VOLS}${COMMA}{\"name\": \"${i}\",\"persistentVolumeClaim\": {\"claimName\": \"${i}\"}}"
+    COMMA=","
+  done
+  
+  NAMESPACE=${NAMESPACE:-default}
+  kubectl run -it --rm --restart=Never --image=${IMAGE} -n ${NAMESPACE} pvc-mounter-${SUFFIX} --overrides "
+  {
+    \"spec\": {
+      \"hostNetwork\": true,
+      \"containers\":[
+        {
+          \"args\": [\"${COMMAND}\"],
+          \"stdin\": true,
+          \"tty\": true,
+          \"name\": \"pvc\",
+          \"image\": \"${IMAGE}\",
+          \"volumeMounts\": [
+            ${VOL_MOUNTS}
+          ]
+        }
+      ],
+      \"volumes\": [
+        ${VOLS}
+      ]
+    }
+  }
+  " -- ${COMMAND}
+
+}
+
+function kubectl-scale-ns-to-zero() {
+
+  NS=$1
+  for pods in statefulset deployment daemonset; do NAME=$(kubectl get ${pods} -n ${NS} -o json | jq -r '.items |.[] | .metadata.name'); kubectl scale ${pods} -n ${NS} --replicas=0 ${NAME}; done
+
+}

@@ -107,7 +107,7 @@ contexts:
 current-context: ${K8S_NS}
 EOF
 
-  echo "[!] New kubeconfig file generated at '~/.kube/${K8S_CLUSTER_NAME}-${K8S_NS}.yaml'!"
+  echo "[!] New kubeconfig file generated at '~/.kube/${K8S_CLUSTER_NAME}-${K8S_NS}-${K8S_USERNAME}.yaml'!"
 
 }
 
